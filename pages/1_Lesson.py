@@ -1,12 +1,12 @@
 import streamlit as st
 import json
 import os
-import nbformat
-from nbconvert import HTMLExporter
+import time
+
 from utils.style_loader import load_css
 from utils.sidebar import show_sidebar
 from utils.mission import initialize_mission
-import time
+from utils.notebook_reader import display_notebook
 
 
 # -------------------------
@@ -18,17 +18,27 @@ st.set_page_config(
     layout="wide"
 )
 
+
+# -------------------------
+# Load Custom Style & Sidebar
+# -------------------------
 load_css()
 show_sidebar()
 initialize_mission()
+
+
 # -------------------------
 # Load Lesson Data
 # -------------------------
-with open("data/lessons.json", "r", encoding="utf-8") as file:
+with open(
+    "data/lessons.json",
+    "r",
+    encoding="utf-8"
+) as file:
     lessons = json.load(file)
 
 
-# For now, always show Day 1
+# For now always show Day 1
 lesson = lessons[0]
 
 
@@ -37,10 +47,11 @@ lesson = lessons[0]
 # -------------------------
 st.title("📚 Today's Lesson")
 
+
 st.success(
     f"""
     Day {lesson['day']} - {lesson['title']}
-    
+
     ⏱ Estimated Time: {lesson['time']}
     """
 )
@@ -61,7 +72,6 @@ st.info(
 # -------------------------
 # Notebook Viewer
 # -------------------------
-
 st.subheader("📓 Learning Notebook")
 
 
@@ -73,57 +83,66 @@ notebook_path = os.path.join(
 
 if os.path.exists(notebook_path):
 
-    with open(
-        notebook_path,
-        "r",
-        encoding="utf-8"
-    ) as f:
-        notebook = nbformat.read(
-            f,
-            as_version=4
-        )
-
-
-    html_exporter = HTMLExporter()
-
-    html_data, _ = html_exporter.from_notebook_node(
-        notebook
-    )
-
-
-    st.components.v1.html(
-        html_data,
-        height=800,
-        scrolling=True
+    display_notebook(
+        notebook_path
     )
 
 else:
     st.error(
-        "Notebook file not found."
+        "❌ Notebook file not found."
     )
 
 
 # -------------------------
-# End Message
+# Learning Tip
 # -------------------------
-
 st.divider()
 
-st.success(
-    """
-    🎉 Congratulations on completing today's lesson!
 
-    Take a short break, then move to the Daily Task page.
+st.warning(
+    """
+    💡 Learning Tip
+
+    Do not just read the notebook.
+    
+    Open Jupyter Notebook or Google Colab,
+    type the code yourself, experiment with it,
+    and try changing the examples.
     """
 )
 
-if st.button("📚 Mark Lesson Completed"):
+
+# -------------------------
+# Completion Section
+# -------------------------
+st.success(
+    """
+    🎉 Congratulations on finishing today's lesson!
+
+    You are one step closer to becoming a Data Scientist.
+    """
+)
+
+
+if st.button(
+    "📚 Mark Lesson Completed",
+    use_container_width=True
+):
+
     st.session_state.lesson_done = True
-    
-    st.success("🎉 Lesson completed! Great work 🚀")
-    
-    st.info("Redirecting to Home Page in 3 seconds...")
-    
+
+    st.balloons()
+
+    st.success(
+        "🎉 Lesson completed! Great work 🚀"
+    )
+
+    st.info(
+        "Redirecting to Home Page in 3 seconds..."
+    )
+
     time.sleep(3)
-    
-    st.switch_page("streamlit_app.py")
+
+    st.switch_page(
+        "streamlit_app.py"
+    )

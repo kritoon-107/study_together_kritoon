@@ -3,9 +3,6 @@ import json
 import time
 import os
 import random
-import nbformat
-from nbconvert import HTMLExporter
-
 
 from utils.style_loader import load_css
 from utils.sidebar import show_sidebar
@@ -15,6 +12,7 @@ from utils.gamification import (
     add_badge
 )
 from utils.mission import initialize_mission
+from utils.notebook_reader import display_notebook
 
 
 # -------------------------
@@ -27,36 +25,16 @@ st.set_page_config(
     layout="wide"
 )
 
+
+# -------------------------
+# Load Theme & Features
+# -------------------------
+
 load_css()
 show_sidebar()
+
 initialize_gamification()
 initialize_mission()
-
-
-# -------------------------
-# Helper Function
-# -------------------------
-
-def show_notebook(path, height=600):
-    if os.path.exists(path):
-
-        with open(path, "r", encoding="utf-8") as file:
-            notebook = nbformat.read(
-                file,
-                as_version=4
-            )
-
-        exporter = HTMLExporter()
-        html, _ = exporter.from_notebook_node(notebook)
-
-        st.components.v1.html(
-            html,
-            height=height,
-            scrolling=True
-        )
-
-    else:
-        st.error("Notebook not found.")
 
 
 # -------------------------
@@ -71,6 +49,7 @@ with open(
     tasks = json.load(file)
 
 
+# Currently showing Day 1
 task = tasks[0]
 
 
@@ -81,29 +60,34 @@ task = tasks[0]
 st.title("📝 Today's Challenge")
 
 
-st.success(
-    f"""
-    Day {task['day']} - {task['title']}
+# st.success(
+#     f"""
+#     Day {task['day']} - {task['title']}
 
-    Difficulty: {task['difficulty']}
-    """
+#     Difficulty: {task['difficulty']}
+#     """
+# )
+
+
+# -------------------------
+# Challenge Description
+# -------------------------
+
+# if "question" in task:
+#     st.subheader("🎯 Challenge")
+
+#     st.write(
+#         task["question"]
+#     )
+
+
+# -------------------------
+# Practice Notebook
+# -------------------------
+
+st.subheader(
+    "📓 Practice Notebook"
 )
-
-
-# -------------------------
-# Problem
-# -------------------------
-
-st.subheader("🎯 Challenge")
-
-# st.write(task["question"])
-
-
-# -------------------------
-# Task Notebook
-# -------------------------
-
-st.subheader("📓 Practice Notebook")
 
 
 task_path = os.path.join(
@@ -113,31 +97,54 @@ task_path = os.path.join(
 )
 
 
-show_notebook(task_path)
+if os.path.exists(task_path):
 
+    display_notebook(
+        task_path
+    )
 
-with open(task_path, "rb") as file:
-    st.download_button(
-        "⬇️ Download Practice Notebook",
-        file,
-        file_name=task["task_notebook"],
-        mime="application/x-ipynb+json"
+    # Download notebook
+    with open(
+        task_path,
+        "rb"
+    ) as file:
+
+        st.download_button(
+            "⬇️ Download Practice Notebook",
+            data=file,
+            file_name=task["task_notebook"],
+            mime="application/x-ipynb+json"
+        )
+
+else:
+
+    st.error(
+        "❌ Practice notebook not found."
     )
 
 
 # -------------------------
-# Hint
+# Hint Section
 # -------------------------
 
-# with st.expander("💡 Need a Hint?"):
-#     st.info(task["hint"])
+# if "hint" in task:
+
+#     with st.expander(
+#         "💡 Need a Hint?"
+#     ):
+#         st.info(
+#             task["hint"]
+#         )
 
 
 # -------------------------
-# Answer Notebook
+# Student Coding Workspace
 # -------------------------
 
-st.subheader("💻 Your Coding Workspace")
+st.subheader(
+    "💻 Your Coding Workspace"
+)
+
 
 student_code = st.text_area(
     "Write your Python solution here:",
@@ -153,30 +160,61 @@ print(numbers)
 )
 
 
-if st.button("💾 Save My Code (Temporary)"):
-    st.session_state.student_code = student_code
+if st.button(
+    "💾 Save My Code (Temporary)"
+):
+
+    st.session_state.student_code = (
+        student_code
+    )
 
     st.success(
-        "Your code has been saved for this session. Now you can See the Answers"
+        """
+        Your code has been saved for this session.
+
+        You can now compare your solution with the answer notebook.
+        """
     )
 
 
-with st.expander("📒 View Answer Notebook (Try First)"):
-    
+# -------------------------
+# Answer Notebook
+# -------------------------
+
+with st.expander(
+    "📒 View Answer Notebook (Try First)"
+):
+
     answer_path = os.path.join(
         "notebooks",
         "answers",
         task["answer_notebook"]
     )
 
-    show_notebook(answer_path)
 
-    with open(answer_path, "rb") as file:
-        st.download_button(
-            "⬇️ Download Answer Notebook",
-            file,
-            file_name=task["answer_notebook"],
-            mime="application/x-ipynb+json"
+    if os.path.exists(answer_path):
+
+        display_notebook(
+            answer_path
+        )
+
+
+        with open(
+            answer_path,
+            "rb"
+        ) as file:
+
+            st.download_button(
+                "⬇️ Download Answer Notebook",
+                data=file,
+                file_name=task["answer_notebook"],
+                mime="application/x-ipynb+json"
+            )
+
+    else:
+
+        st.error(
+            "❌ Answer notebook not found."
         )
 
 
@@ -184,9 +222,14 @@ with st.expander("📒 View Answer Notebook (Try First)"):
 # Complete Task
 # -------------------------
 
-if st.button("✅ I Completed Today's Task"):
+if st.button(
+    "✅ I Completed Today's Task",
+    use_container_width=True
+):
 
-    add_xp(25)
+    add_xp(
+        25
+    )
 
     add_badge(
         f"📝 Day {task['day']} Challenge Completed"
@@ -194,7 +237,9 @@ if st.button("✅ I Completed Today's Task"):
 
     st.session_state.task_done = True
 
+
     st.balloons()
+
 
     st.success(
         """
@@ -202,35 +247,50 @@ if st.button("✅ I Completed Today's Task"):
 
         ⭐ +25 XP earned.
 
-        Keep showing up every day.
+        Keep showing up every day and your skills will grow.
         """
     )
+
 
     st.info(
         "🏠 Redirecting to Home Page in 3 seconds..."
     )
 
-    time.sleep(3)
 
-    st.switch_page("streamlit_app.py")
+    time.sleep(
+        3
+    )
+
+
+    st.switch_page(
+        "streamlit_app.py"
+    )
 
 
 # -------------------------
-# Motivation
+# Daily Motivation
 # -------------------------
 
 st.divider()
 
 
 quotes = [
+
     "Every expert Data Scientist was once a beginner.",
+
     "The best way to learn Data Science is by writing code.",
+
     "Do not fear errors; they are part of the learning process.",
-    "Consistency beats intensity. Learn a little every day."
+
+    "Consistency beats intensity. Learn a little every day.",
+
+    "Small daily improvements lead to massive long-term growth."
 ]
 
 
 st.info(
-    "🌱 Daily Motivation\n\n" +
-    random.choice(quotes)
+    "🌱 Daily Motivation\n\n"
+    + random.choice(
+        quotes
+    )
 )
