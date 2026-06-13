@@ -1,0 +1,9 @@
+[
+    {
+        "day": 1,
+        "title": "Introduction to Data Science",
+        "time": "20 Minutes",
+        "mentor_message": "Don't try to understand everything today. Just explore what Data Science is and enjoy the process.",
+        "notebook": "day01_intro.ipynb"
+    }
+]

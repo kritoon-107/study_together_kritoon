@@ -1,0 +1,11 @@
+[
+    {
+        "day": 1,
+        "title": "Python Lists Practice",
+        "difficulty": "⭐ Beginner",
+        "question": "Create a Python list containing numbers 1 to 5.",
+        "hint": "Use square brackets [] to create lists.",
+        "task_notebook": "day01_task.ipynb",
+        "answer_notebook": "day01_answer.ipynb"
+    }
+]
